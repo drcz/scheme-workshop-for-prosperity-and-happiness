@@ -1,11 +1,11 @@
 ;;; SCHEME FOR PROSPERITY AND HAPPINESS, PART I,
-;;; -- version 1.0, 2015-07-31
+;;; -- version 1.1, 2015-07-31
 
 ;;; Hi!
 ;;; Sorry for bad style, typos and stuff but I wanted to finish this asap and have it done;
 ;;; at some spare time I will probably improve it (or not). feel free to contact me on suggestions, errors, or questions.
 
-;;; Good.
+;;; Good luck!
 
 ;;; Symbolic Expressions (SExps but we'll call them SEX for they are sexy) are atoms and cons cells;
 ;;; Atoms include symbols (e.g. factorial, append, +, if), closures (they represent procedures, we'll get back to these)
@@ -570,13 +570,14 @@ x
 (calculator '(DUP * SWAP DUP * +) '(2 3))
 
 ;;; to make it easier to undestand here's the sequence of (expr x stack) states:
-expr: (DUP * SWAP DUP * +) stack: (2 3)
-expr: (* SWAP DUP * +)     stack: (2 2 3)
-expr: (SWAP DUP * +)       stack: (4 3)
-expr: (DUP * +)            stack: (3 4)
-expr: (* +)                stack: (3 3 4)
-expr: (+)                  stack: (9 4)
-expr: ()                   stack: (13)
+;; expr: (DUP * SWAP DUP * +) stack: (2 3)
+;; expr: (* SWAP DUP * +)     stack: (2 2 3)
+;; expr: (SWAP DUP * +)       stack: (4 3)
+;; expr: (DUP * +)            stack: (3 4)
+;; expr: (* +)                stack: (3 3 4)
+;; expr: (+)                  stack: (9 4)
+;; expr: ()                   stack: (13)
+
 
 ;; nb: if you want to have similar "traces" just add the following line:
   (write `(expr: ,expr stack: ,stack)) (newline)
@@ -590,4 +591,4 @@ expr: ()                   stack: (13)
 
 ;;; anyway thanks for your time, good night and happy hacking!
 
-;;; -- the end --
+;; -- the end --
