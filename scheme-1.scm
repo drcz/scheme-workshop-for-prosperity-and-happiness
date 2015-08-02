@@ -1,11 +1,13 @@
 ;;; SCHEME FOR PROSPERITY AND HAPPINESS, PART I,
-;;; -- version 1.1, 2015-07-31
+
+;;; -- version 1.1, 2015-08-02 -- applied some of suggestions and corrections from Panicz Godek, The Grand Schemer.
+;;; -- version 1.0, 2015-07-31
 
 ;;; Hi!
 ;;; Sorry for bad style, typos and stuff but I wanted to finish this asap and have it done;
 ;;; at some spare time I will probably improve it (or not). feel free to contact me on suggestions, errors, or questions.
 
-;;; Good luck!
+;;; Good.
 
 ;;; Symbolic Expressions (SExps but we'll call them SEX for they are sexy) are atoms and cons cells;
 ;;; Atoms include symbols (e.g. factorial, append, +, if), closures (they represent procedures, we'll get back to these)
@@ -43,9 +45,14 @@
 
 ;;; a primitive procedures include arithmetic operations +, -, *, /, modulo, (perhaps some more...)
 ;;; and there are some predicates i.e. procedures evaluating to booleans only:
-(eq? 2 3)
+(= 2 3)
+(= 2 2)
 
-(eq? 2 2)
+;;; [nb I was showing you all comparisons with eq? which works fine under most schemes but according to the language
+;;;  specification http://www.r6rs.org/final/html/r6rs/r6rs.html eq? on numerals is unspecified, therefore we should
+;;;  use = instead; it also states that eqv? should work ok on all atoms, so perhaps...]
+
+(eq? #t #f)
 
 (number? 3)
 (number? #t)
@@ -60,11 +67,11 @@
 ;;; which we abbreviate
 'hola!
 
-;;; the second special form is define, which assigns some expression to given symbol
+;;; the second special form is define, which binds some expression to given symbol
 (define x 5)
 x
 (+ x 3)
-;;; (yup, when I told you we'll see assignment in a minute I meant that).
+;;; (yup, when I told you we'll see "assignment" in a minute I meant that).
 
 ;;; note it does evaluate it's second argument, e.g.
 (define x (+ 2 3)
@@ -103,7 +110,7 @@ x
 ;;; which means we can use it as any other [primitive] procedure
 ((lambda (x) (* x x)) 5)
 
-;;; now combined with assignment we can give it some nice name
+;;; now combined with define we can give it some nice name
 (define square (lambda (x) (* x x)))
 
 ;;; and use it just like we use the primitive operators
@@ -119,7 +126,7 @@ x
 
 ;;; (a)-(c) are part of lisp's coolness. 
 
-;;; now you know all of lisp, and most of scheme. go home!
+;;; now you know all of lisp, and most of scheme. go home! (to write a compiler in <500 lines of code of course)
 
 
 
@@ -129,33 +136,22 @@ x
 ;;; the recursive definition of factorial is 0! = 1, (n+1)! = (n+1)*n!.
 ;;; which we encode in lisp like this
 
-(define (factorial n)
-  (if (= n 0)
-      1
-      (* n (factorial (- n 1)))))
+(define factorial
+  (lambda (n)
+    (if (= n 0)
+	1
+	(* n (factorial (- n 1))))))
 
 (factorial 4)
 
 ;;; yes, the only way to do "the looping" is trough recursive calls.
-;;; no, I do believe it is more natural for humans to think of, for many reasons "BUT THIS MARGIN IS TOO NARROW TO CONTAIN THEM",
+;;; no, they are not inefficient.
+;;; yes, I do believe it is more natural for humans to think of, for many reasons "BUT THIS MARGIN IS TOO NARROW TO CONTAIN THEM",
 ;;; if you excuse the pun.
 
-;;; oh, now notice I didn't write
-(define wrong-factorial
-  (lambda (n)
-    (if (= n 0)
-	1
-	(* n (wrong-factorial (- n 1))))))
-;;; because I was afraid this will not work as wrong-factorial used inside the lambda expression
-;;; wasn't defined and define evaluates it's second argument before the assignment.
-;;; but of course it does the assignment BEFORE you apply it, so "the meaning" for "wrong-factorial"
-;;; is now defined. sorry for that. [anyway if you knew special form let, there it would definitely not work.]
-
-;;; anyway, it's more concise to use define that way, i.e. naming procedure with it's arguments,
-;;; and it has more benefits which you will not see for now.
-
-;;; how about concatenating two lists, e.g. (q w e) and (1 2 3) to get (q w e 1 2 3) ?
-;;; it's just about replacing the empty list at the end of (q w e) with the list (1 2 3), right?
+;;; sugared version of (define XXX (lambda YYY ZZZ)) is (define (XXX YYY) ZZZ), so we will switch to this notation with the next example,
+;;; which is... concatenating two lists, e.g. (q w e) and (1 2 3) to get (q w e 1 2 3).
+;;; it's just about replacing the empty list in the cdr of the last cons of (q w e) with the list (1 2 3), right?
 ;;; but, since SEX lists are single-directed structures, we need to traverse the first list and reconstruct it.
 ;;; well, to be precise, we don't need to, the interpreter will do that.
 (define (append xs ys)
@@ -196,7 +192,7 @@ x
 (define (reverse xs) (rev2 xs '()))
 
 ;;; what it does it traverses xs [only once!] and conses its consecutive elements onto acc [for accumulating] list,
-;;; which it returs as it's result. note also that this is a tail-recursive function, i.e. the last thing it does is
+;;; which it returns as it's result. note also that this is a tail-recursive function, i.e. the last thing it does is
 ;;; the call (to itself). therefore it does not need to put any trash on the call stack.
 
 ;;; however I advise you to forget about the code efficiency for now.
@@ -250,6 +246,10 @@ x
 
 ;;; etc.
 
+;;; two notes on the side:
+;;; 1) reduce is often called fold-right as it folds a list from right to left;
+;;; 2) traditionally people write its arguments the opposite way we did in here; I suggested writing "xs id op"
+;;; as in model theory/universal algebra <M,e,+>. but, nevermind.
 
 ;;; as Antonio suggested, we could compute factorial with this easily:
 
@@ -290,27 +290,29 @@ x
 
 ;;; now suppose we would like to compose some procedure with itself, n times,
 
-(define (n-fold-f n f)
+(define (iterate-f n f)
   (if (= n 0)
       (lambda (x) x)
-      (lambda (x) (f ((n-fold-f (- n 1) f) x)))))
+      (lambda (x) (f ((iterate-f (- n 1) f) x)))))
 
 ;;; oh yeah, we do have "=" [for numerals], I just used eq? to be more oldschool.
+;;; (cf note about eq? at the beginning).
 
-((n-fold-f 3 succ) 5)
-((n-fold-f 3 square) 2)
+((iterate-f 3 succ) 5)
+((iterate-f 3 square) 2)
 
 ;;; and the last magical operation, currying (in honour of Haskell Curry):
 
-(define (n-fold n)
+(define (iterate n)
   (lambda (f)
     (if (= n 0)
 	(lambda (x) x)
-	(lambda (x) (f (((n-fold (- n 1)) f) x))))))
+	(lambda (x) (f (((iterate (- n 1)) f) x))))))
 
-(((n-fold 3) succ) 5)
+(((iterate 3) succ) 5)
 
 ;;; if you do understand this construction, you are THAT close to enlightement.
+
 
 ;;; now we stopped here.
 ;;; the conclusions are the following:
@@ -363,23 +365,23 @@ x
 
 ;;; 2. and now things get complicated...
 ;;; but we can take each element of the list and then cons it at the end of each permutation of all the remaining ones.
-;;; in order to have these we need a "drop" procedure which removes element from the list:
-(define (drop x xs)
+;;; in order to have these we need a "omit" procedure which removes element from the list:
+(define (omit x xs)
   (if (eq? x (car xs))
       (cdr xs)
-      (drop x (cdr xs))))
+      (omit x (cdr xs))))
 
-(drop 'w '(q w e))
+(omit 'w '(q w e))
 
 ;;; yeah, that's ugly one, it works only in the case when there's exactly one occurrence of x in xs; it's ok for our task, but
 ;;; in general we would rather prefer something like:
-(define (drop x xs)
+(define (omit x xs)
   (cond ((null? xs) '())
-	((eq? x (car xs)) (drop x (cdr xs)))
-	(#t (cons (car xs) (drop x (cdr xs))))))
+	((eq? x (car xs)) (omit x (cdr xs)))
+	(#t (cons (car xs) (omit x (cdr xs))))))
 
-(drop 'w '(q w e w q w))
-(drop 'x '(q w e))
+(omit 'w '(q w e w q w))
+(omit 'x '(q w e))
 
 ;;; ah yes. cond is a special form which generalizes if. try for yourself...
 
@@ -392,7 +394,7 @@ x
       (map (lambda (x)
 	     (map (lambda (p)
 		    (cons x p))
-		  (perm (drop x xs))))
+		  (perm (omit x xs))))
 	   xs)))
 
 (perm '(1))
@@ -420,7 +422,7 @@ x
       (reduce (map (lambda (x)
 		     (map (lambda (p)
 			    (cons x p))
-			  (perm (drop x xs))))
+			  (perm (omit x xs))))
 		   xs)
 	      '()
 	      append)))
@@ -566,7 +568,7 @@ x
 	      ;;; any more commands?
 	      ))))
 
-;;; so we can expess the sum-of-squares program like this:
+;;; so we can express the sum-of-squares program like this:
 (calculator '(DUP * SWAP DUP * +) '(2 3))
 
 ;;; to make it easier to undestand here's the sequence of (expr x stack) states:
@@ -578,7 +580,6 @@ x
 ;; expr: (+)                  stack: (9 4)
 ;; expr: ()                   stack: (13)
 
-
 ;; nb: if you want to have similar "traces" just add the following line:
   (write `(expr: ,expr stack: ,stack)) (newline)
 ;; between "(define (calculator..." and "(if (null?...".
@@ -587,8 +588,8 @@ x
 ;;; but that's really the task for another time.
 ;;; also it would be interesting to compile expressions like (+ (* a a) (* b b)) into this "calculator code",
 ;;; but at the moment I have no idea how to do this and should probably go to bed.
-;;; in part II perhaps we could do this, as a nice pretext to learn some more scheme (and Olin Shiver's incredible matcher).
+;;; in part II perhaps we could do this, as a nice pretext to learn some more scheme (and an incredible matcher from Alex Shinn).
 
 ;;; anyway thanks for your time, good night and happy hacking!
 
-;; -- the end --
+;;; -- the end --
