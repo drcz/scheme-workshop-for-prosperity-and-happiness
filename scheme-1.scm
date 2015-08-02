@@ -74,7 +74,7 @@ x
 ;;; (yup, when I told you we'll see "assignment" in a minute I meant that).
 
 ;;; note it does evaluate it's second argument, e.g.
-(define x (+ 2 3)
+(define x (+ 2 3))
 x
 
 ;;; now we can get into primitive procedures for cons cells:
