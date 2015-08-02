@@ -346,10 +346,28 @@ x
 
 (cart '(q w e) '(1 2))
 
+;;; close, but notice we now have a list of lists of pairs, instead of a list... [my fault, I forgot!]
+;;; we need to "flatten" it, i.e. append the lists produced by the outermost map;
+;;; there are many ways to do this, but to keep the spirit of minimalism let's use the old good reduce:
+(reduce '((q w e) (1 2 3) (hi there)) '() append)
+;;; got it? so now:
 
-;;; now the tricky part: the hardest recursive equation ever.
+(define (cart xs ys)
+  (reduce (map (lambda (y)
+		 (map (lambda (x)
+			(cons x y))
+		      xs))
+	       ys)
+	  '()
+	  append))
+
+;;; boom done:
+(cart '(q w e) '(1 2))
+
+
+;;; and now for something [not that] completely different: the hardest recursive equation ever.
 ;;; assignment: define procedure perm which takes a list and returns all the permutations of it's elements, e.g.
-;; (perm '(q w e)) => ((q w e) (q e w) (w q e) (w e q) (e w q) (e q w))
+;;; (perm '(q w e)) => ((q w e) (q e w) (w q e) (w e q) (e w q) (e q w))
 ;;; give it a try if you dare.
 
 
@@ -407,14 +425,10 @@ x
 
 
 
-
 ;;; yes, that's because "the outer map" gets a separate list of permutations;
 ;;; so we need to concatenate these, in order to have a single list of permutations.
-;;; there are several ways to do this...
-;;; but to keep the spirit of minimalism let's use the old good reduce:
-(reduce '((q w e) (1 2 3) (hi there)) '() append)
-
-;;; got it?
+;;; it's the same as with cartesian product (an eager student should take a look at append-map procedure in srfi-1,
+;;; https://www.gnu.org/software/guile/manual/html_node/SRFI_002d1-Fold-and-Map.html)
 
 (define (perm xs)
   (if (null? xs)
