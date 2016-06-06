@@ -1,5 +1,6 @@
 ;;; SCHEME FOR PROSPERITY AND HAPPINESS, PART I,
 
+;;; -- version 1.2, 2016-06-06 -- with suggestions and corrections from Victor Brigé -- muchas gracias Victor!
 ;;; -- version 1.1, 2015-08-02 -- applied some of suggestions and corrections from Panicz Godek, The Grand Schemer.
 ;;; -- version 1.0, 2015-07-31
 
@@ -94,7 +95,7 @@ x
 ;;; yes, you can
 (caddr a-list)
 
-;;; no time for the last two special forms of this workshop
+;;; no time to lose! the last two special forms of this workshop:
 
 ;;; if is a conditional expression; it evaluates its first argument and if it's #f becomes the value of the third, otherwise the second:
 (define x 5)
@@ -273,7 +274,7 @@ x
 ((mk-adder 3) 2)
 ((mk-adder 5) 2)
 
-;;; note that the values of mk-adder is a procedure of 1 arugment which "remembers" the value of n as it was during it's creation.
+;;; note that the values of mk-adder is a procedure of 1 argument which "remembers" the value of n as it was during it's creation.
 ;;; that's the power of lexical scoping. please do contemplate this example.
 
 ;;; now a little more magic and we'll be done for now:
@@ -311,10 +312,31 @@ x
 
 (((iterate 3) succ) 5)
 
-;;; if you do understand this construction, you are THAT close to enlightement.
+;;; if you do understand this construction, you are THAT close to enlightement!
+;;; take your time...
+
+;;; ...to make things a little easier it may help to take a look at completely uncurried version of iterate:
+(define (iterate n f x)
+  (if (= n 0)
+      x
+      (f (iterate (- n 1) f x))))
+
+(iterate 3 succ 5)
+
+;;; ...and a second hint: here is a function of 2 arguments...
+(define (f a b) (+ a b))
+
+(f 2 3)
+
+;;; ...and here it's curried version...
+(define (c a) (lambda (b) (+ a b)))
+
+((cf 2) 3)
+
+;;; ...and now go back to iterate. good luck!
 
 
-;;; now we stopped here.
+;;; now we stopped the workshop here.
 ;;; the conclusions are the following:
 ;;; with a bunch of primitive functions and special forms we do have an extremely elegant, complete programming language.
 ;;; of course the crappy procedures we devised are all in standard libraries, namely in SRFI-1.
@@ -383,27 +405,27 @@ x
 
 ;;; 2. and now things get complicated...
 ;;; but we can take each element of the list and then cons it at the end of each permutation of all the remaining ones.
-;;; in order to have these we need a "omit" procedure which removes element from the list:
-(define (omit x xs)
+;;; in order to have these we need a "delete" procedure which removes element from the list:
+(define (delete x xs)
   (if (eq? x (car xs))
       (cdr xs)
-      (omit x (cdr xs))))
+      (cons (car xs) (delete x (cdr xs)))))
 
-(omit 'w '(q w e))
+(delete 'w '(q w e))
 
 ;;; yeah, that's ugly one, it works only in the case when there's exactly one occurrence of x in xs; it's ok for our task, but
 ;;; in general we would rather prefer something like:
-(define (omit x xs)
+(define (delete x xs)
   (cond ((null? xs) '())
-	((eq? x (car xs)) (omit x (cdr xs)))
-	(#t (cons (car xs) (omit x (cdr xs))))))
+	((eq? x (car xs)) (delete x (cdr xs)))
+	(#t (cons (car xs) (delete x (cdr xs))))))
 
-(omit 'w '(q w e w q w))
-(omit 'x '(q w e))
+(delete 'w '(q w e w q w))
+(delete 'x '(q w e))
 
 ;;; ah yes. cond is a special form which generalizes if. try for yourself...
 
-;;; nice. assignment: define drop using reduce.
+;;; nice. assignment: define delete using reduce.
 
 ;;; ok so let's try our "permutation equation"
 (define (perm xs)
@@ -412,7 +434,7 @@ x
       (map (lambda (x)
 	     (map (lambda (p)
 		    (cons x p))
-		  (perm (omit x xs))))
+		  (perm (delete x xs))))
 	   xs)))
 
 (perm '(1))
@@ -436,7 +458,7 @@ x
       (reduce (map (lambda (x)
 		     (map (lambda (p)
 			    (cons x p))
-			  (perm (omit x xs))))
+			  (perm (delete x xs))))
 		   xs)
 	      '()
 	      append)))
