@@ -1,0 +1,48 @@
+(def foldr
+     (^ (op e xs)
+	(if (= xs ())
+	    e
+	    (op (car xs)
+		(foldr op e (cdr xs))))))
+
+(def map
+     (^ (f xs)
+	(foldr (^ (h t) (cons (f h) t))
+	       ()
+	       xs)))
+
+(def map2
+     (^ (f xs ys)
+	(if (= xs ())
+	    ()
+	    (if (= ys ())
+		()
+		(cons (f (car xs) (car ys))
+		      (map2 f (cdr xs) (cdr ys)))))))
+
+
+(def scalar-product
+     (^ (vector scalar)
+	(map (^ (x) (* x scalar)) vector)))
+
+(def dot-product
+     (^ (vector1 vector2)
+	(foldr + 0 (map2 * vector1 vector2))))
+
+
+(def transpose
+     (^ (matrix)
+	(if (= matrix ())
+	    ()
+	    (if (= (car matrix) ())
+		()
+		(cons (map car matrix)
+		      (transpose (map cdr matrix)))))))
+
+(def matrix*
+     (^ (M1 M2)
+	(map (^ (M1-row)
+		(map (^ (M2-col)
+			(dot-product M1-row M2-col))
+		     (transpose M2)))
+	     M1)))
