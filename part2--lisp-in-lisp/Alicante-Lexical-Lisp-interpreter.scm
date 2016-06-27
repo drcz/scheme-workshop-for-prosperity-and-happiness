@@ -15,7 +15,7 @@
 (define (bool->T/nil b) (if b 'T '()))
 
 (define (T/nil? expr) (or (eq? expr 'T) (null? expr)))
-(define (primop? sym) (member sym '(car cdr cons + - * / % = < atom? num? input print pprint newline apply)))
+(define (primop? sym) (member sym '(car cdr cons + - * / % = < atom? num? input print pprint newline list)))
 (define (self-evaluating? expr)
   (or (T/nil? expr)
       (number? expr)
