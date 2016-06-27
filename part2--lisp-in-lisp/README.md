@@ -10,7 +10,11 @@ Thank you very much for participating! Here's the code from the workshop + a lit
 
 * [vectors, matrices](little-linear-algebra.all) -- definitions of a few non-trivial procedures;
 
-* [something dark](darkness.all) -- the simplified Y combinator for function of 1 and 2 arguments;  cat darkness.all | guile Alicante-Lexical-Lisp-interpreter.scm
+* [something dark](darkness.all) -- the simplified Y combinator for function of 1 and 2 arguments
+```
+cat darkness.all | guile Alicante-Lexical-Lisp-interpreter.scm
+```
 
 [js eval](js-eval-kinda.js) -- an attempt at rewriting ["dynamic"] Eval in js (seems to work).
-[elixir eval+parser](elixir-eval-and-parser.exs) -- Eval in elixir, plus a crude SExpr parser.
+
+**NEU!** [elixir eval+parser](elixir-eval-and-parser.exs) -- Eval in elixir, plus a crude SExp parser.
