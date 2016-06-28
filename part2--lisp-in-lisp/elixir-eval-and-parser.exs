@@ -1,6 +1,9 @@
 ### a dynamically scoped mini-lisp variant
 ### -- my first elixir program that does something.
 
+## todo: more elixirish error handling
+
+
 defmodule Minilisp do
 
   defmodule Environment do
@@ -95,12 +98,21 @@ defmodule Minilisp do
     
     ### ''everybody stand back, I know regular expressions.''
     def tokenize(str), do: Regex.scan(~r/[\s]*([()']|[^\s()']+)/, str, capture: :all_but_first) |> List.flatten        
-  end
-  
+
+    ### reversing the parse proces:
+    def unparse([h|t]) when is_number(t) or is_binary(t), do: "(" <> unparse(h) <> " . " <> unparse(t) <> ")"
+    def unparse([h|t]), do: "(" <> unparse(h) <> unparse_list(t)
+    def unparse({"proc",_,_}), do: "&procedure"
+    def unparse(sym) when is_binary(sym), do: sym
+    def unparse(e), do: inspect(e) # numbers and maybe sth...
+    def unparse_list([]), do: ")"
+    def unparse_list([h|t]), do: " " <> unparse(h) <> unparse_list(t)  
+  end  
 end
 
 ## eg:
-Minilisp.Parser.parse_expr("((^ (x) (* x x)) (+ 2 3))") |> Minilisp.Evaluator.eval_expr([])
+Minilisp.Parser.parse_expr("((^ (x) (* x x)) (+ 2 3))") |> Minilisp.Evaluator.eval_expr([]) |> Minilisp.Parser.unparse()
+
 # [the following one will not work in lexical lisp without Y:]
 Minilisp.Parser.parse_expr(
   "( (^ (fac map) (map fac '(1 2 3 4 5)))"
@@ -108,4 +120,5 @@ Minilisp.Parser.parse_expr(
   <> "(^ (f xs) (if (= xs ()) () (cons (f (car xs)) (map f (cdr xs)))))"
   <>")")
   |> Minilisp.Evaluator.eval_expr([])
+|> Minilisp.Parser.unparse()
 ### -- how cool is that?
